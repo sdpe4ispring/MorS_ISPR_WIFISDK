@@ -39,6 +39,8 @@ struct mbedtls_context {
 
 void failed(const char *fn, int rv);
 void cert_verify_failed(uint32_t rv);
+void mbedtls_context_init(struct mbedtls_context *ctx);
+void mbedtls_context_free(struct mbedtls_context *ctx);
 void open_nb_socket(struct mbedtls_context *ctx,
                     const char *hostname,
                     const char *port,
@@ -64,6 +66,40 @@ void cert_verify_failed(uint32_t rv) {
     mbedtls_x509_crt_verify_info(buf, sizeof(buf), "\t", rv);
     printf("Certificate verification failed (%0" PRIx32 ")\n%s\n", rv, buf);
     exit(1);
+}
+
+/*
+    Initialize mbedtls_context structure. 
+    Call this function before using the context.
+*/
+void mbedtls_context_init(struct mbedtls_context *ctx) {
+    /* Initialize all components to zero state */
+    mbedtls_net_init(&ctx->net_ctx);
+    mbedtls_ssl_init(&ctx->ssl_ctx);
+    mbedtls_ssl_config_init(&ctx->ssl_conf);
+    mbedtls_x509_crt_init(&ctx->ca_crt);
+    mbedtls_x509_crt_init(&ctx->client_crt);
+    mbedtls_pk_init(&ctx->client_key);
+    mbedtls_entropy_init(&ctx->entropy);
+    mbedtls_ctr_drbg_init(&ctx->ctr_drbg);
+}
+
+/*
+    Free mbedtls_context structure.
+    Call this function when done using the context.
+*/
+void mbedtls_context_free(struct mbedtls_context *ctx) {
+    if (ctx == NULL) return;
+    
+    /* Free all allocated resources */
+    mbedtls_net_free(&ctx->net_ctx);
+    mbedtls_ssl_free(&ctx->ssl_ctx);
+    mbedtls_ssl_config_free(&ctx->ssl_conf);
+    mbedtls_x509_crt_free(&ctx->ca_crt);
+    mbedtls_x509_crt_free(&ctx->client_crt);
+    mbedtls_pk_free(&ctx->client_key);
+    mbedtls_ctr_drbg_free(&ctx->ctr_drbg);
+    mbedtls_entropy_free(&ctx->entropy);
 }
 
 /*
